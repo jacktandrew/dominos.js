@@ -31,7 +31,7 @@ button:hover, .green .purse {cursor: hand; border-style: inset;}
 #outer form input[type=checkbox] { margin-left: 15px;}
 
 #outer form h4 { padding: 5px; width: 111px; float: left;}
-#outer form .pworp2 {margin: 3px 3px 3px 154px; visibility: hidden;}
+#outer form .pwor_2 {margin: 3px 3px 3px 154px; visibility: hidden;}
 
 #inner {top: 50px;}
 
@@ -71,26 +71,26 @@ div.pips div {border-radius: 5px; height: 4px; width: 5px; background: #333; pos
 
 div.bar {height:0px; width: 25px; margin: 0 3px;}
 
-.pips.p1 div {top: 11px; left: 13px;}
+.pips._1 div {top: 11px; left: 13px;}
 
-.pips.p2 div, .pips.p4 div {top: 5px; left: 6px;}
-.pips.p2 div:last-child, .pips.p4 div:last-child {top: 17px; left: 20px;}
+.pips._2 div, .pips._4 div {top: 5px; left: 6px;}
+.pips._2 div:last-child, .pips._4 div:last-child {top: 17px; left: 20px;}
 
-.pips.p3 div, .pips.p5 div {top: 3px; left: 4px;}
-.pips.p3 div:nth-child(1), .pips.p5 div:nth-child(2) {top: 11px; left: 13px;}
-.pips.p3 div:last-child, .pips.p5 div:last-child {top: 19px; left: 22px;}
+.pips._3 div, .pips._5 div {top: 3px; left: 4px;}
+.pips._3 div:nth-child(1), .pips._5 div:nth-child(2) {top: 11px; left: 13px;}
+.pips._3 div:last-child, .pips._5 div:last-child {top: 19px; left: 22px;}
 
-.pips.p4 div:nth-child(1) {top: 5px; left: 20px;}
-.pips.p4 div:nth-child(2) {top: 17px; left: 6px;}
+.pips._4 div:nth-child(1) {top: 5px; left: 20px;}
+.pips._4 div:nth-child(2) {top: 17px; left: 6px;}
 
-.pips.p5 div:nth-child(1) {top: 3px; left: 22px;}
-.pips.p5 div:nth-child(3) {top: 19px; left: 4px;}
+.pips._5 div:nth-child(1) {top: 3px; left: 22px;}
+.pips._5 div:nth-child(3) {top: 19px; left: 4px;}
 
-.pips.p6 div {top: 1px; left: 4px;}
-.pips.p6 div:nth-child(1) {top: 11px; left: 4px;}
-.pips.p6 div:nth-child(2) {top: 21px; left: 4px;}
-.pips.p6 div:nth-child(3) {top: 1px; left: 22px;}
-.pips.p6 div:nth-child(4) {top: 11px; left: 22px;}
-.pips.p6 div:nth-child(5) {top: 21px; left: 22px;}
+.pips._6 div {top: 1px; left: 4px;}
+.pips._6 div:nth-child(1) {top: 11px; left: 4px;}
+.pips._6 div:nth-child(2) {top: 21px; left: 4px;}
+.pips._6 div:nth-child(3) {top: 1px; left: 22px;}
+.pips._6 div:nth-child(4) {top: 11px; left: 22px;}
+.pips._6 div:nth-child(5) {top: 21px; left: 22px;}
 
 
