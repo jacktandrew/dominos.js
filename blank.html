@@ -36,25 +36,26 @@
     .pips._6 div:nth-child(5) {top: 21px; left: 22px;}
   </style>
   <script>
+  
     var boneyard = [];
-
+    
     function boneBuilder(a,b) {
       boneyard.push('_' + a + '_' + b);
       if (b === 0) { return boneyard }
       if (a === 0) { a = b; b--; }
       return boneBuilder(a-1,b);
     };
-
-
+    
+    
     function draw(n) {
       for (i = 0; i < n; i++) {
         var r = Math.floor(Math.random() * boneyard.length)
         var pair = boneyard.splice(r,1)[0]
         var newTile = $("<div class='tile'></div>").addClass(pair)
-
+    
         function makeFace(x){
           return $("<div class='pips'></div>").addClass('_' + x).append( makePips(x) )
-
+    
           function makePips(x) {
             var starter = "<div></div>"
             if (x < 1) { return "" }
