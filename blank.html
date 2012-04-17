@@ -1,12 +1,163 @@
 <head>
   <script src="http://code.jquery.com/jquery-latest.js"></script>
+  <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.18/jquery-ui.min.js"></script>
   <script src="js/lib/underscore.js"></script>
   <script src="js/lib/simple-inheritance.js"></script>
   <script src="js/lib/backbone.js"></script>
   <script src="js/lib/jStorage.js"></script>
-  
+  <script src="js/lib/jquery-css-transform.js"></script>
+  <script src="js/lib/jquery-animate-css-rotate-scale.js"></script>
+  <script type="text/coffeescript">
+  boneyard = []
+
+  boneBuilder = (a, b) ->
+    boneyard.push('_' + a + '_' + b)
+    return boneyard if b is 0
+    (a = b; b--) if a is 0
+    boneBuilder(a-1, b)
+
+  draw = (n) ->
+    randomDraw = _.shuffle(boneyard).splice(0, n)
+    fabricate value for value in randomDraw
+
+  makePips = (x) ->
+    starter = "<div></div>"
+    if x < 1 then return '' else starter.concat(makePips(x - 1))
+
+  fabricate = (string) ->
+    top = makePips( +string.charAt(1) )
+    bottom = makePips( +string.charAt(3) )
+    template = _.template("
+      <div class='tile draggable <%= pair.slice(0,2) %> <%= pair.slice(2,4) %>'>
+        <div class='pips <%= pair.slice(0,2) %>'>
+          <%= topPips %>
+        </div>
+        <div class='bar'></div>
+        <div class='pips <%= pair.slice(2,4) %>'>
+          <%= bottomPips %>
+        </div>
+      </div>")
+    domino = template({pair: string, topPips: top, bottomPips: bottom})
+    $('#boneyard').append(domino)
+
+  $ ->
+    boneBuilder(6,6)
+    draw(28)
+    
+    $('.tile').rotate('0deg')
+
+    $( ".tile" ).dblclick ->
+      $(this).animate({rotate: '+=90deg'}, 500, ->
+        if 'rotate(0deg)' == $(this).css('transform') or 'rotate(180deg)' == $(this).css('transform')
+          top = $(this).children()[0]; bottom = $(this).children()[2]
+          $(this).css({transform: 'rotate(0deg)'}).prepend(bottom).append(top)
+      )
+
+    $( ".draggable" ).draggable({ 
+      revert: "invalid",
+      snap: ".drop_zone", 
+      snapMode: "inner"
+    })
+    
+    $('.drop_zone#starter').droppable({
+      accept: ".tile:has(._6 ~ ._6)",
+      tolerance: 'fit',
+      activeClass: "ui-state-hover",
+      drop: (event, ui) ->
+        el = this
+        $(ui.draggable[0]).draggable( "option", "disabled", true ).removeClass('ui-draggable draggable')
+        $(this).hide()
+        dropAsign('#upper', 6)
+        dropAsign('#lower', 6)
+        $('.drop_zone#upper').show().animate({top: '-=56', rotate: '0deg'}, 500)
+        $('.drop_zone#lower').show().animate({top: '+=56', rotate: '180deg'}, 500)
+        rotateDouble(ui, el) 
+    })
+    
+
+    dropAsign = (el, num) ->
+      $(el).attr('rel', num).droppable({
+        accept: ".tile._" + num,
+        tolerance: 'fit',
+        activeClass: "ui-state-hover",
+        drop: (event, ui) ->
+          el = this
+          angle = $(el).rotate()
+          topCount = ui.draggable[0].children[0].childElementCount
+          bottomCount = ui.draggable[0].children[2].childElementCount
+          
+          if topCount == bottomCount
+            rotateDouble(ui, el, angle) if $(el).attr() == 'straight'
+            moveDZ(el, angle) 
+          else
+            moveDZ(el, angle)
+            rotateDZ(el, angle) unless $(el).attr() == 'straight'
+          
+
+          if num != bottomCount && (angle == '0deg'|| angle == '90deg') || num != topCount && (angle == '180deg' || angle == '270deg')
+            top = ui.draggable[0].children[0]
+            bottom = ui.draggable[0].children[2]
+            $(ui.draggable[0]).prepend(bottom).append(top)
+            topCount = ui.draggable[0].children[0].childElementCount
+            bottomCount = ui.draggable[0].children[2].childElementCount
+          
+
+          
+          $(ui.draggable[0]).draggable( "option", "disabled", true ).removeClass('ui-draggable draggable')
+          
+          dropAsign(el, topCount) if angle == '0deg' or angle == '90deg'
+          dropAsign(el, bottomCount) if angle == '180deg' or angle == '270deg'
+      })
+
+    moveDZ = (el, angle) ->
+      $(el).animate({'top':'-=74'}, 600) if angle == '0deg'
+      $(el).animate({'top':'+=74'}, 600) if angle == '180deg'
+      $(el).animate({'left':'+=74'}, 600) if angle == '90deg'
+      $(el).animate({'left':'-=74'}, 600) if angle == '270deg'
+      $(el).attr(title: 'straight')
+
+    rotateDZ = (el, angle) ->
+      console.log 'rotateDZ'
+      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '+=18', top: '+=18'}, 500) if parseInt( $(el).css('top') ) < 150 and angle == '0deg'
+      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '-=18'}, 500) if parseInt( $(el).css('top') ) > 390 and angle == '180deg'
+      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '+=18'}, 500) if parseInt( $(el).css('left') ) > 1050 and angle == '90deg'
+      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '+=18', top: '-=18'}, 500) if parseInt( $(el).css('left') ) < 300 and angle == '270deg'
+      $(el).rotate({rotate: '0deg'}) if angle == '360deg'
+
+    adjustDZdouble = (el, angle) ->
+      console.log 'adjustDZdouble'
+      $(el).animate({top:'+=37'}, 400) if angle == '0deg'
+      $(el).animate({top:'-=37'}, 400) if angle == '180deg'
+      $(el).animate({left:'-=37'}, 400) if angle == '90deg'
+      $(el).animate({left:'+=37'}, 400) if angle == '270deg'
+      $(el).attr(title: 'cross')
+
+    adjustDouble = (ui, el, angle) ->
+      console.log 'adjustDouble'
+      $(ui.draggable[0]).animate({'top':'+=20'}, 400) if angle == '0deg'
+      $(ui.draggable[0]).animate({'top':'-=20'}, 400) if angle == '180deg'
+      $(ui.draggable[0]).animate({'left':'-=20'}, 400) if angle == '90deg'
+      $(ui.draggable[0]).animate({'left':'+=20'}, 400) if angle == '270deg'
+
+    rotateDouble = (ui, el, angle) ->
+      console.log 'rotateDouble'
+      $(ui.draggable[0]).animate({rotate: '+=90deg'}, 600, ->
+        adjustDouble(ui, el, angle)
+        adjustDZdouble(el, angle)
+      )
+  </script>
+  <script type="text/javascript" src="coffee-script.js"></script>
+    
   <style>
-    div.tile {height: 70px; width: 35px; border-radius: 7px; float: left; margin: 10px;}
+    #boneyard {height: 545px; width: 180px; padding: 5px; border:5px solid black; float: left;}
+    #play_area {float: left; height: 545px; width: 990px; border: 1px solid black; margin: 1% 2%;}
+    .ui-state-hover {background: eee;}
+
+    .drop_zone, .tile {height: 70px; width: 35px; border-radius: 7px;}
+    .drop_zone {position: absolute; top:250px; left: 700px; border: 2px dashed #ccc;}
+    .drop_zone#upper, .drop_zone#lower { display: none;}
+    
+    div.tile {float: left; z-index: 5; background: white;}
     div.tile, div.bar {border: 2px outset #444;}
     div.pips {height: 30px; width: 35px;position: relative; margin-top: 2px;}
     div.pips div {border-radius: 5px; height: 4px; width: 5px; background: #333; position: absolute; border:2px inset #444;}
@@ -35,49 +186,14 @@
     .pips._6 div:nth-child(4) {top: 11px; left: 22px;}
     .pips._6 div:nth-child(5) {top: 21px; left: 22px;}
   </style>
-  <script>
-  
-    var boneyard = [];
-    
-    function boneBuilder(a,b) {
-      boneyard.push('_' + a + '_' + b);
-      if (b === 0) { return boneyard }
-      if (a === 0) { a = b; b--; }
-      return boneBuilder(a-1,b);
-    };
-    
-    
-    function draw(n) {
-      for (i = 0; i < n; i++) {
-        var r = Math.floor(Math.random() * boneyard.length)
-        var pair = boneyard.splice(r,1)[0]
-        var newTile = $("<div class='tile'></div>").addClass(pair)
-    
-        function makeFace(x){
-          return $("<div class='pips'></div>").addClass('_' + x).append( makePips(x) )
-    
-          function makePips(x) {
-            var starter = "<div></div>"
-            if (x < 1) { return "" }
-            else { return starter.concat( makePips(x-1) ); }
-          }
-        }
-        
-        newTile.append( makeFace( pair.slice(1,2) ) )
-        newTile.append("<div class='bar'></div>")
-        newTile.append( makeFace( pair.slice(3,4) ) )
-        $('body').append(newTile)
-      }
-      return boneyard
-    }
-    
-    $(function() {
-      boneBuilder(6,6);
-      draw(28);
-    });
-  </script>
 </head>
 
 
 <body>
+  <div id="boneyard"></div>
+  <div id="play_area">
+    <div class='drop_zone' id="upper"></div>
+    <div class='drop_zone' id="starter"></div>
+    <div class='drop_zone' id="lower"></div>
+  </div>
 </body>

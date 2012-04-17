@@ -1,0 +1,4 @@
+edgeCases
+  about to turn a corner - put a double
+    
+  already turned a corner - put a double
