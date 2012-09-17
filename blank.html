@@ -44,21 +44,6 @@
     boneBuilder(6,6)
     draw(28)
     
-    $('.tile').rotate('0deg')
-
-    $( ".tile" ).dblclick ->
-      $(this).animate({rotate: '+=90deg'}, 500, ->
-        if 'rotate(0deg)' == $(this).css('transform') or 'rotate(180deg)' == $(this).css('transform')
-          top = $(this).children()[0]; bottom = $(this).children()[2]
-          $(this).css({transform: 'rotate(0deg)'}).prepend(bottom).append(top)
-      )
-
-    $( ".draggable" ).draggable({ 
-      revert: "invalid",
-      snap: ".drop_zone", 
-      snapMode: "inner"
-    })
-    
     $('.drop_zone#starter').droppable({
       accept: ".tile:has(._6 ~ ._6)",
       tolerance: 'fit',
@@ -74,26 +59,41 @@
         rotateDouble(ui, el) 
     })
     
+    $('.tile').rotate('0deg')
+    $('.tile.draggable').dblclick ->
+      $(this).animate({rotate: '+=90deg'}, 500, ->
+        if $(this).rotate() == '180deg'
+          top = $(this).children()[0]; bottom = $(this).children()[2]
+          $(this).rotate('0deg').prepend(bottom).append(top)
+      )
 
+    $( ".draggable" ).draggable({ 
+      revert: "invalid",
+      snap: ".drop_zone", 
+      snapMode: "inner",
+      snapTolerance: 15
+    })
+    
     dropAsign = (el, num) ->
-      $(el).attr('rel', num).droppable({
+      $(el).attr('title', num).droppable({
         accept: ".tile._" + num,
         tolerance: 'fit',
         activeClass: "ui-state-hover",
         drop: (event, ui) ->
-          el = this
-          angle = $(el).rotate()
+          tAngle = $(ui.draggable[0]).rotate()
+          angle = $(this).rotate()
+          unless angle == tAngle || parseInt(angle) == parseInt(tAngle) + 180
+            rotateSingle(ui, angle)
           topCount = ui.draggable[0].children[0].childElementCount
           bottomCount = ui.draggable[0].children[2].childElementCount
-          
-          if topCount == bottomCount
-            rotateDouble(ui, el, angle) if $(el).attr() == 'straight'
-            moveDZ(el, angle) 
-          else
-            moveDZ(el, angle)
-            rotateDZ(el, angle) unless $(el).attr() == 'straight'
-          
 
+          if topCount == bottomCount
+            rotateDouble(ui, this, angle) unless $(this).attr('rel') == 'cross'
+            moveDZ(this, angle)
+          else
+            moveDZ(this, angle)
+            rotateDZ(this, angle)
+          
           if num != bottomCount && (angle == '0deg'|| angle == '90deg') || num != topCount && (angle == '180deg' || angle == '270deg')
             top = ui.draggable[0].children[0]
             bottom = ui.draggable[0].children[2]
@@ -101,49 +101,51 @@
             topCount = ui.draggable[0].children[0].childElementCount
             bottomCount = ui.draggable[0].children[2].childElementCount
           
-
-          
           $(ui.draggable[0]).draggable( "option", "disabled", true ).removeClass('ui-draggable draggable')
-          
-          dropAsign(el, topCount) if angle == '0deg' or angle == '90deg'
-          dropAsign(el, bottomCount) if angle == '180deg' or angle == '270deg'
+          dropAsign(this, topCount) if angle == '0deg' or angle == '90deg'
+          dropAsign(this, bottomCount) if angle == '180deg' or angle == '270deg'
       })
+      
+    rotateSingle = (ui, angle) ->
+      $(ui.draggable[0]).animate({rotate: '-=90deg', left: '-=18', top: '+=18'}, 400) if angle == '0deg'
+      $(ui.draggable[0]).animate({rotate: '+=90deg', left: '+=18', top: '+=18'}, 400) if angle == '180deg'
+      $(ui.draggable[0]).animate({rotate: '+=90deg', left: '+=18', top: '-=18'}, 400) if angle == '90deg'
+      $(ui.draggable[0]).animate({rotate: '+=90deg', left: '+=18', top: '-=18'}, 400) if angle == '270deg'
 
-    moveDZ = (el, angle) ->
-      $(el).animate({'top':'-=74'}, 600) if angle == '0deg'
-      $(el).animate({'top':'+=74'}, 600) if angle == '180deg'
-      $(el).animate({'left':'+=74'}, 600) if angle == '90deg'
-      $(el).animate({'left':'-=74'}, 600) if angle == '270deg'
-      $(el).attr(title: 'straight')
+    moveDZ = (dz, angle) ->
+      $(dz).animate({'top':'-=74'}, 600) if angle == '0deg'
+      $(dz).animate({'top':'+=74'}, 600) if angle == '180deg'
+      $(dz).animate({'left':'+=74'}, 600) if angle == '90deg'
+      $(dz).animate({'left':'-=74'}, 600) if angle == '270deg'
+      $(dz).attr(rel: 'straight')
 
-    rotateDZ = (el, angle) ->
-      console.log 'rotateDZ'
-      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '+=18', top: '+=18'}, 500) if parseInt( $(el).css('top') ) < 150 and angle == '0deg'
-      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '-=18'}, 500) if parseInt( $(el).css('top') ) > 390 and angle == '180deg'
-      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '+=18'}, 500) if parseInt( $(el).css('left') ) > 1050 and angle == '90deg'
-      $(el).attr(title: 'cross').animate({rotate: '+=90deg', left: '+=18', top: '-=18'}, 500) if parseInt( $(el).css('left') ) < 300 and angle == '270deg'
-      $(el).rotate({rotate: '0deg'}) if angle == '360deg'
+    rotateDZ = (dz, angle) ->
+      if parseInt( $(dz).css('top') ) < 150 and angle == '0deg'
+        $(dz).attr(rel: 'cross').animate({rotate: '+=90deg', left: '+=18', top: '+=18'}, 500)       
+      if parseInt( $(dz).css('top') ) > 370 and angle == '180deg'
+        $(dz).attr(rel: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '-=18'}, 500) 
+      if parseInt( $(dz).css('left') ) > 1050 and angle == '90deg'
+        $(dz).attr(rel: 'cross').animate({rotate: '+=90deg', left: '-=18', top: '+=18'}, 500) 
+      if parseInt( $(dz).css('left') ) < 600 and angle == '270deg'
+        $(dz).attr(rel: 'cross').animate({rotate: '0deg', left: '+=18', top: '-=18'}, 500) 
+      
+    adjustDZdouble = (dz, angle) ->
+      $(dz).animate({top:'+=37'}, 400) if angle == '0deg'
+      $(dz).animate({top:'-=37'}, 400) if angle == '180deg'
+      $(dz).animate({left:'-=37'}, 400) if angle == '90deg'
+      $(dz).animate({left:'+=37'}, 400) if angle == '270deg'
+      $(dz).attr(rel: 'cross')
 
-    adjustDZdouble = (el, angle) ->
-      console.log 'adjustDZdouble'
-      $(el).animate({top:'+=37'}, 400) if angle == '0deg'
-      $(el).animate({top:'-=37'}, 400) if angle == '180deg'
-      $(el).animate({left:'-=37'}, 400) if angle == '90deg'
-      $(el).animate({left:'+=37'}, 400) if angle == '270deg'
-      $(el).attr(title: 'cross')
-
-    adjustDouble = (ui, el, angle) ->
-      console.log 'adjustDouble'
+    adjustDouble = (ui, dz, angle) ->
       $(ui.draggable[0]).animate({'top':'+=20'}, 400) if angle == '0deg'
       $(ui.draggable[0]).animate({'top':'-=20'}, 400) if angle == '180deg'
       $(ui.draggable[0]).animate({'left':'-=20'}, 400) if angle == '90deg'
       $(ui.draggable[0]).animate({'left':'+=20'}, 400) if angle == '270deg'
 
-    rotateDouble = (ui, el, angle) ->
-      console.log 'rotateDouble'
+    rotateDouble = (ui, dz, angle) ->
       $(ui.draggable[0]).animate({rotate: '+=90deg'}, 600, ->
-        adjustDouble(ui, el, angle)
-        adjustDZdouble(el, angle)
+        adjustDouble(ui, dz, angle)
+        adjustDZdouble(dz, angle)
       )
   </script>
   <script type="text/javascript" src="coffee-script.js"></script>
@@ -152,33 +154,24 @@
     #boneyard {height: 545px; width: 180px; padding: 5px; border:5px solid black; float: left;}
     #play_area {float: left; height: 545px; width: 990px; border: 1px solid black; margin: 1% 2%;}
     .ui-state-hover {background: eee;}
-
     .drop_zone, .tile {height: 70px; width: 35px; border-radius: 7px;}
     .drop_zone {position: absolute; top:250px; left: 700px; border: 2px dashed #ccc;}
     .drop_zone#upper, .drop_zone#lower { display: none;}
-    
     div.tile {float: left; z-index: 5; background: white;}
     div.tile, div.bar {border: 2px outset #444;}
     div.pips {height: 30px; width: 35px;position: relative; margin-top: 2px;}
     div.pips div {border-radius: 5px; height: 4px; width: 5px; background: #333; position: absolute; border:2px inset #444;}
-
     div.bar {height:0px; width: 25px; margin: 0 3px;}
-
     .pips._1 div {top: 11px; left: 13px;}
-
     .pips._2 div, .pips._4 div {top: 5px; left: 6px;}
     .pips._2 div:last-child, .pips._4 div:last-child {top: 17px; left: 20px;}
-
     .pips._3 div, .pips._5 div {top: 3px; left: 4px;}
     .pips._3 div:nth-child(1), .pips._5 div:nth-child(2) {top: 11px; left: 13px;}
     .pips._3 div:last-child, .pips._5 div:last-child {top: 19px; left: 22px;}
-
     .pips._4 div:nth-child(1) {top: 5px; left: 20px;}
     .pips._4 div:nth-child(2) {top: 17px; left: 6px;}
-
     .pips._5 div:nth-child(1) {top: 3px; left: 22px;}
     .pips._5 div:nth-child(3) {top: 19px; left: 4px;}
-
     .pips._6 div {top: 1px; left: 4px;}
     .pips._6 div:nth-child(1) {top: 11px; left: 4px;}
     .pips._6 div:nth-child(2) {top: 21px; left: 4px;}
@@ -187,7 +180,6 @@
     .pips._6 div:nth-child(5) {top: 21px; left: 22px;}
   </style>
 </head>
-
 
 <body>
   <div id="boneyard"></div>
